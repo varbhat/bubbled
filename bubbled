@@ -15,5 +15,8 @@ bwrap \
 	--ro-bind-try ${XDG_RUNTIME_DIR} ${XDG_RUNTIME_DIR} \
 	--ro-bind-try /tmp/.X11-unix /tmp/.X11-unix \
 	--new-session \
-	--chdir / \
+	--chdir /home \
+	--setenv HOME /home \
+	--bind-try ${BWRAP_HOME} /home \
 	"$@"
+	
