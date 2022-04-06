@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# Root rights are required
+if [ $EUID != 0 ]; then
+	echo "Root rights are required!"
+
+	exit 1
+fi
+
+if [ ! -d "${BWRAP_ROOT}" ]; then
+	echo "BWRAP_ROOT is missing"
+	exit 1
+fi
+
+# First unmount just in case
+umount -Rl "${BWRAP_ROOT}"
+
+mount --bind "${BWRAP_ROOT}" "${BWRAP_ROOT}"
+mount -t proc /proc "${BWRAP_ROOT}"/proc
+mount --bind /sys "${BWRAP_ROOT}"/sys
+mount --make-rslave "${BWRAP_ROOT}"/sys
+mount --bind /dev "${BWRAP_ROOT}"/dev
+mount --bind /dev/pts "${BWRAP_ROOT}"/dev/pts
+mount --bind /dev/shm "${BWRAP_ROOT}"/dev/shm
+mount --make-rslave "${BWRAP_ROOT}"/dev
+
+rm -f "${BWRAP_ROOT}"/etc/resolv.conf
+cp /etc/resolv.conf "${BWRAP_ROOT}"/etc/resolv.conf
+
+mkdir -p "${BWRAP_ROOT}"/run/shm
+
+echo "Entering chroot"
+echo "To exit the chroot, perform the \"exit\" command"
+chroot "${BWRAP_ROOT}" /usr/bin/env LANG=en_US.UTF-8 TERM=xterm PATH="/bin:/sbin:/usr/bin:/usr/sbin" /bin/bash
+echo "Exiting chroot"
+
+umount -l "${BWRAP_ROOT}"
+umount "${BWRAP_ROOT}"/proc
+umount "${BWRAP_ROOT}"/sys
+umount "${BWRAP_ROOT}"/dev/pts
+umount "${BWRAP_ROOT}"/dev/shm
+umount "${BWRAP_ROOT}"/dev
